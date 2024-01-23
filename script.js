@@ -252,9 +252,9 @@ let rareItemFound = false;
 
 let cumulativeProbabilities = calculateCumulativeProbabilities();
 
-function getRandomItem() {
+function getRandomItem(luck) {
   let randomValue = Math.random();
-  randomValue /= 1;
+  randomValue /= luck;
   let temp = Object.keys(items);
   let low = 0;
   let high = temp.length;
@@ -302,7 +302,7 @@ function updateTotalItemsDisplay() {
 }
 
 function collectItem() {
-  const item = getRandomItem();
+  const item = getRandomItem(1);
   totalItems++;
   items[item][1]++;
   updateTotalItemsDisplay();
@@ -351,15 +351,19 @@ function loadGameState() {
 }
 
 function updateItemDisplay(item) {
-  if (items[item][1] > 0) {
-    document.getElementById("" + item).style = "display:block;";
+  const element = document.getElementById("" + item);
+  
+  if (element) {
+    if (items[item][1] > 0) {
+      element.style.display = "block";
+    }
+    element.innerHTML =
+      item +
+      ": " +
+      items[item][1].toLocaleString() +
+      " | 1/" +
+      formatNumberWithCommas(Math.round(1 / items[item][0]));
   }
-  document.getElementById("" + item).innerHTML =
-    item +
-    ": " +
-    items[item][1].toLocaleString() +
-    " | 1/" +
-    formatNumberWithCommas(Math.round(1 / items[item][0]));
 }
 
 function createItems() {
@@ -394,8 +398,59 @@ function formatNumberWithCommas(number) {
 
 function calculateTotalStats() {
   let length = Object.keys(items).length;
-  console.log(length);
   document.getElementById("totalStats").innerHTML = `There are currently ${length} different stats in the game <3`;
+}
+
+document.getElementById("export-button").addEventListener("click", function() {
+  exportSave();
+});
+
+document.getElementById("import-button").addEventListener("click", function() {
+  importSave();
+});
+
+function exportSave() {
+  try {
+    let data = {
+      items: items,
+      totalItems: totalItems
+    };
+    let jsonString = JSON.stringify(data);
+    let encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    document.getElementById("exported-data").value = encodedData;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+function importSave() {
+  try {
+    let encodedData = document.getElementById("exported-data").value;
+    let decodedData = atob(encodedData);
+    let jsonData = JSON.parse(decodedData);
+
+    if (jsonData && jsonData.items && jsonData.totalItems) {
+      items = jsonData.items;
+      totalItems = jsonData.totalItems;
+
+      updateTotalItemsDisplay();
+      updateCumulativeProbabilities();
+
+      // Update the display for each item
+      for (let propertyName in items) {
+        updateItemDisplay(propertyName);
+      }
+
+      // Save the imported data
+      saveGameState();
+    } else {
+      console.log("Invalid save data format");
+    }
+  } catch (error) {
+    console.error("Error during import:", error.message);
+    alert("An error occurred importing your data, did you paste it in correctly?");  
+  }
 }
 
 function gameLoop() {
