@@ -168,7 +168,7 @@ label {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     font-family: 'Rubik', sans-serif;
     margin-bottom: 10px; /* Add some spacing at the bottom */
-    width: 340px; /* Set a specific width for the input */
+    width: 465px; /* Set a specific width for the input */
 }
 
 #exported-data:focus {
